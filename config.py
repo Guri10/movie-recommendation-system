@@ -1,0 +1,5 @@
+DB_NAME = "movie_recommendation"
+DB_USER = "postgres"
+DB_PASSWORD = "ATharva@2301"  
+DB_HOST = "localhost"
+DB_PORT = "5432"

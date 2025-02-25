@@ -1,0 +1,8 @@
+venv/
+__pycache__/
+*.log
+*.csv
+*.tsv
+.zshrc
+config.py  # Prevents database credentials from being pushed
+data/      # Ignore dataset files if they are large
