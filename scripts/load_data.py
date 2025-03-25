@@ -25,22 +25,27 @@ genre_cols = [
 def load_movies():
     conn = connect_db()
     cur = conn.cursor()
-    
+
     movies = pd.read_csv(
         "/Users/atharvagurav/Documents/movie-recommendation-system/data/ml-100k/u.item", sep="|", encoding="latin-1", header=None,
         usecols=[0, 1] + list(range(5, 24)), names=["movie_id", "title"] + genre_cols
     )
-    
+
     # Convert genre flags to a single string
     movies["genre"] = movies[genre_cols].apply(lambda x: ", ".join(x.index[x == 1]), axis=1)
     movies = movies[["movie_id", "title", "genre"]]
-    
+
     for _, row in movies.iterrows():
         cur.execute(
-            "INSERT INTO movies (movie_id, title, genre) VALUES (%s, %s, %s) ON CONFLICT (movie_id) DO NOTHING",
+            """
+            INSERT INTO movies (movie_id, title, genre)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (movie_id) 
+            DO UPDATE SET title = EXCLUDED.title, genre = EXCLUDED.genre
+            """,
             (row.movie_id, row.title, row.genre)
         )
-    
+
     conn.commit()
     cur.close()
     conn.close()
@@ -50,16 +55,22 @@ def load_movies():
 def load_users():
     conn = connect_db()
     cur = conn.cursor()
-    
+
     users = pd.read_csv("/Users/atharvagurav/Documents/movie-recommendation-system/data/ml-100k/u.user", sep="|", encoding="latin-1", header=None,
                          names=["user_id", "age", "gender", "occupation", "zip_code"])
-    
+
     for _, row in users.iterrows():
         cur.execute(
-            "INSERT INTO users (user_id, age, gender, occupation, zip_code) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (user_id) DO NOTHING",
+            """
+            INSERT INTO users (user_id, age, gender, occupation, zip_code)
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (user_id) 
+            DO UPDATE SET age = EXCLUDED.age, gender = EXCLUDED.gender, 
+                          occupation = EXCLUDED.occupation, zip_code = EXCLUDED.zip_code
+            """,
             (row.user_id, row.age, row.gender, row.occupation, row.zip_code)
         )
-    
+
     conn.commit()
     cur.close()
     conn.close()
@@ -69,17 +80,22 @@ def load_users():
 def load_ratings():
     conn = connect_db()
     cur = conn.cursor()
-    
+
+    # Read all ratings
     ratings = pd.read_csv("/Users/atharvagurav/Documents/movie-recommendation-system/data/ml-100k/u.data", sep="\t", encoding="latin-1", header=None,
                           names=["user_id", "movie_id", "rating", "timestamp"])
-    
+
+    # Insert ratings directly (no filtering or conflict resolution)
     for _, row in ratings.iterrows():
         cur.execute(
-            "INSERT INTO ratings (user_id, movie_id, rating, timestamp) VALUES (%s, %s, %s, to_timestamp(%s)) ON CONFLICT DO NOTHING",
+            """
+            INSERT INTO ratings (user_id, movie_id, rating, timestamp)
+            VALUES (%s, %s, %s, to_timestamp(%s))
+            ON CONFLICT DO NOTHING
+            """,
             (int(row.user_id), int(row.movie_id), int(row.rating), int(row.timestamp))
         )
 
-    
     conn.commit()
     cur.close()
     conn.close()

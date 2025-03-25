@@ -1,26 +1,26 @@
--- Dropping tables (if exist) to avoid conflicts
-drop table if exists ratings;
-drop table if exists users;
-drop table if exists movies;
+-- schema.sql
 
-create table movies (
-    movie_id serial primary key,
-    title varchar(255) not null,
-    genre varchar(255) not null
+CREATE TABLE IF NOT EXISTS movies (
+    movie_id INTEGER PRIMARY KEY,
+    title TEXT NOT NULL,
+    genre TEXT
 );
 
-create table users (
-    user_id serial primary key,
-    age int,
-    gender varchar(10),
-    occupation varchar(50),
-    zip_code varchar(10)
+CREATE TABLE IF NOT EXISTS users (
+    user_id INTEGER PRIMARY KEY,
+    age INTEGER,
+    gender TEXT,
+    occupation TEXT,
+    zip_code TEXT
 );
 
-create table ratings(
-    rating_id serial primary key,
-    user_id int references users(user_id) on delete cascade,
-    movie_id int references movies(movie_id) on delete cascade,
-    rating int check (rating between 1 and 5),
-    timestamp timestamp
-)
+CREATE TABLE IF NOT EXISTS ratings (
+    rating_id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    movie_id INTEGER NOT NULL,
+    rating INTEGER NOT NULL,
+    timestamp TIMESTAMP NOT NULL,
+    CONSTRAINT unique_full_rating UNIQUE (user_id, movie_id, rating, timestamp),
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (movie_id) REFERENCES movies(movie_id)
+);
